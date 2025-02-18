@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
             <div class="match-info">
                 <h3>${match.match_name}</h3>
-                <a href="${match.stream_link}" target="_blank" class="watch-now-button">Watch Now</a>
+                <button class="watch-now-button" data-stream="${match.stream_link}">Watch Now</button>
             </div>
         `;
         matchContainer.appendChild(card);
@@ -80,4 +80,41 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log(`Switched to ${activeTab}`);
         });
     });
+
+    // Watch Now button click event handler
+    const watchNowButtons = document.querySelectorAll('.watch-now-button');
+    watchNowButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const streamUrl = e.target.dataset.stream;
+            playStream(streamUrl);
+        });
+    });
+
+    // Function to play the HLS stream using hls.js
+    function playStream(url) {
+        const videoContainer = document.createElement('div');
+        videoContainer.className = 'video-container';
+        const videoElement = document.createElement('video');
+        videoElement.controls = true;
+        videoElement.style.width = '100%';
+        videoElement.style.maxWidth = '800px';
+
+        videoContainer.appendChild(videoElement);
+        app.appendChild(videoContainer);
+
+        if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(url);
+            hls.attachMedia(videoElement);
+            hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                videoElement.play();
+            });
+        }
+        else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+            videoElement.src = url;
+            videoElement.addEventListener('loadedmetadata', function() {
+                videoElement.play();
+            });
+        }
+    }
 });
